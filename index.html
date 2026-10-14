@@ -90,14 +90,8 @@ h1 {
 #canvas-container {
     position: relative;
     width: min(360px, calc(100vw - 24px));
-
-    /*
-       iPhone ekranında mümkün olduğunca fazla alan kullan.
-       Fakat oyun alanının oranını koru.
-    */
     max-height: calc(100vh - 125px);
     aspect-ratio: 360 / 500;
-
     margin: 0 auto;
 }
 
@@ -105,38 +99,27 @@ canvas {
     display: block;
     width: 100%;
     height: 100%;
-
     background: #2a2a40;
-
     border: 3px solid #444;
     border-radius: 14px;
-
     box-shadow:
         0 10px 30px rgba(0,0,0,.45),
         inset 0 0 20px rgba(255,255,255,.03);
-
     touch-action: none;
 }
 
 #restart-btn {
     display: none;
-
     margin: 10px auto 0;
     padding: 12px 25px;
-
     background: linear-gradient(135deg, #ff4757, #ff6b81);
     color: white;
-
     border: none;
     border-radius: 12px;
-
     font-size: 16px;
     font-weight: bold;
-
     box-shadow: 0 5px 15px rgba(255,71,87,.3);
-
     cursor: pointer;
-
     touch-action: manipulation;
 }
 
@@ -150,38 +133,144 @@ canvas {
     margin-top: 5px;
 }
 
+/* GİRİŞ EKRANI VE LİDERLİK TABLOSU MODALI */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(15, 15, 26, 0.96);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 99999;
+    padding: 20px;
+}
+
+.modal-content {
+    background: #252538;
+    border: 2px solid rgba(255, 255, 255, 0.15);
+    border-radius: 16px;
+    padding: 25px 20px;
+    width: min(340px, 100%);
+    box-shadow: 0 15px 35px rgba(0,0,0,0.8);
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.modal-title {
+    font-size: 22px;
+    color: #ffcc00;
+    margin: 0;
+}
+
+.modal-input {
+    width: 100%;
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid #555;
+    background: #1a1a28;
+    color: white;
+    font-size: 15px;
+    text-align: center;
+    outline: none;
+}
+
+.modal-input:focus {
+    border-color: #ffcc00;
+}
+
+.modal-btn {
+    padding: 12px;
+    background: #2ed573;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.modal-btn:active {
+    transform: scale(0.98);
+}
+
+.leaderboard {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 5px;
+}
+
+.leaderboard th, .leaderboard td {
+    padding: 8px;
+    font-size: 13px;
+    text-align: left;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.leaderboard th {
+    color: #aaa;
+}
+
+.leaderboard td:last-child {
+    text-align: right;
+    font-weight: bold;
+    color: #ffcc00;
+}
+
 @media (max-height: 650px) {
     h1 {
         font-size: 19px;
     }
-
     #topbar {
         margin-bottom: 4px;
     }
-
     .stat {
         padding: 4px 9px;
     }
-
     #hint {
         display: none;
     }
 }
 </style>
 
-<!-- Matter.js -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
-
+<!-- Matter.js kütüphanesi CDN adresi -->
+<script src="https://cdn.jsdelivr.net/npm/matter-js@0.19.0/build/matter.min.js"></script>
 </head>
 
 <body>
 
-<div id="game">
+<!-- GİRİŞ VE SKOR TABLOSU MODALI -->
+<div id="start-modal" class="modal-overlay">
+    <div class="modal-content">
+        <h2 class="modal-title">🍎 Meyve Birleştirme 🍐</h2>
+        <input type="text" id="player-name-input" class="modal-input" placeholder="Oyuncu Adını Gir" maxlength="12">
+        <button id="start-game-btn" class="modal-btn">Oyna</button>
+        
+        <div style="margin-top: 5px;">
+            <div style="font-size: 14px; color: #aaa; margin-bottom: 8px; font-weight: bold;">🏆 EN YÜKSEK SKORLAR</div>
+            <table class="leaderboard">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>İsim</th>
+                        <th style="text-align:right;">Puan</th>
+                    </tr>
+                </thead>
+                <tbody id="leaderboard-body">
+                    <!-- Dinamik Liste -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
 
+<div id="game">
     <h1>🍎 Meyve Birleştirme 🍐</h1>
 
     <div id="topbar">
-
         <div class="stat">
             <span class="stat-title">PUAN</span>
             <span id="score" class="stat-value">0</span>
@@ -191,2024 +280,486 @@ canvas {
             <span class="stat-title">EN YÜKSEK</span>
             <span id="highScore" class="stat-value">0</span>
         </div>
-
     </div>
 
     <div id="canvas-container">
-        <canvas id="gameCanvas"
-                width="360"
-                height="500">
-        </canvas>
+        <canvas id="gameCanvas" width="360" height="500"></canvas>
     </div>
 
-    <button id="restart-btn">
-        🔄 Yeniden Başla
-    </button>
+    <button id="restart-btn">🔄 Yeniden Başla</button>
 
     <div id="hint">
         Parmağınla sağa-sola hareket ettir • Dokunarak meyveyi bırak
     </div>
-
 </div>
 
 <script>
+window.addEventListener("DOMContentLoaded", () => {
+    "use strict";
 
-(() => {
+    /* HTML ELEMENTLERİ */
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+    const scoreElement = document.getElementById("score");
+    const highScoreElement = document.getElementById("highScore");
+    const restartButton = document.getElementById("restart-btn");
+    const startModal = document.getElementById("start-modal");
+    const nameInput = document.getElementById("player-name-input");
+    const startGameBtn = document.getElementById("start-game-btn");
+    const leaderboardBody = document.getElementById("leaderboard-body");
 
-"use strict";
-
-/* =========================================================
-   MATTER.JS
-========================================================= */
-
-if (!window.Matter) {
-
-    alert(
-        "Matter.js yüklenemedi.\n" +
-        "İnternet bağlantını kontrol et."
-    );
-
-    return;
-}
-
-const {
-
-    Engine,
-    Runner,
-    Bodies,
-    Composite,
-    Events,
-    Body
-
-} = Matter;
-
-
-/* =========================================================
-   HTML ELEMENTLERİ
-========================================================= */
-
-const canvas =
-    document.getElementById("gameCanvas");
-
-const ctx =
-    canvas.getContext("2d");
-
-const scoreElement =
-    document.getElementById("score");
-
-const highScoreElement =
-    document.getElementById("highScore");
-
-const restartButton =
-    document.getElementById("restart-btn");
-
-
-/* =========================================================
-   OYUN AYARLARI
-========================================================= */
-
-const WIDTH = 360;
-const HEIGHT = 500;
-
-/*
-   Ölüm çizgisini biraz aşağı aldık.
-   Oyun daha zor olacak.
-*/
-const DEAD_LINE_Y = 105;
-
-
-/*
-   Meyveler.
-*/
-const FRUIT_TYPES = [
-
-    {
-        radius: 14,
-        score: 2
-    },
-
-    {
-        radius: 21,
-        score: 4
-    },
-
-    {
-        radius: 29,
-        score: 8
-    },
-
-    {
-        radius: 38,
-        score: 16
-    },
-
-    {
-        radius: 48,
-        score: 32
-    },
-
-    {
-        radius: 62,
-        score: 64
-    },
-
-    {
-        radius: 78,
-        score: 128
+    /* SKOR TABLOSU YÜKLE */
+    function getLeaderboard() {
+        try {
+            return JSON.parse(localStorage.getItem("meyveLeaderboard")) || [];
+        } catch(e) {
+            return [];
+        }
     }
 
-];
+    function saveScore(name, finalScore) {
+        if (!finalScore || finalScore <= 0) return;
+        let leaderboard = getLeaderboard();
+        leaderboard.push({ name: name || "Oyuncu", score: finalScore });
+        leaderboard.sort((a, b) => b.score - a.score);
+        leaderboard = leaderboard.slice(0, 5);
+        localStorage.setItem("meyveLeaderboard", JSON.stringify(leaderboard));
+    }
 
+    function updateLeaderboardUI() {
+        const list = getLeaderboard();
+        leaderboardBody.innerHTML = "";
+        if (list.length === 0) {
+            leaderboardBody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#666;">Henüz skor yok</td></tr>`;
+            return;
+        }
+        list.forEach((entry, idx) => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+                <td>${idx + 1}</td>
+                <td>${entry.name}</td>
+                <td>${entry.score}</td>
+            `;
+            leaderboardBody.appendChild(tr);
+        });
+    }
 
-/* =========================================================
-   MEYVE RESİMLERİ
-========================================================= */
+    // Modal açıldığında skoru hemen göster
+    updateLeaderboardUI();
 
-const fruitFiles = [
+    if (!window.Matter) {
+        alert("Matter.js yüklenemedi! Lütfen internet bağlantınızı kontrol edip sayfayı yenileyin.");
+        return;
+    }
 
-    "f0.png",
-    "f1.jpeg",
-    "f2.jpeg",
-    "f3.jpeg",
-    "f4.jpeg",
-    "f5.jpeg",
-    "f6.jpeg"
+    const { Engine, Runner, Bodies, Composite, Events, Body } = Matter;
 
-];
+    /* OYUN AYARLARI */
+    const WIDTH = 360;
+    const HEIGHT = 500;
+    const DEAD_LINE_Y = 105;
 
+    const FRUIT_TYPES = [
+        { radius: 14, score: 2 },
+        { radius: 21, score: 4 },
+        { radius: 29, score: 8 },
+        { radius: 38, score: 16 },
+        { radius: 48, score: 32 },
+        { radius: 62, score: 64 },
+        { radius: 78, score: 128 }
+    ];
 
-const fruitImages =
-    fruitFiles.map((file) => {
-
+    const fruitFiles = ["f0.png", "f1.jpeg", "f2.jpeg", "f3.jpeg", "f4.jpeg", "f5.jpeg", "f6.jpeg"];
+    const fruitImages = fruitFiles.map((file) => {
         const img = new Image();
-
-        img.onload = () => {
-
-            console.log(
-                file + " yüklendi."
-            );
-
-        };
-
-        img.onerror = () => {
-
-            console.error(
-                file +
-                " yüklenemedi."
-            );
-
-        };
-
         img.src = "./" + file;
-
         return img;
-
     });
 
-
-/* =========================================================
-   SES
-========================================================= */
-
-let audioContext = null;
-
-
-function initAudio() {
-
-    try {
-
-        if (!audioContext) {
-
-            audioContext =
-                new (
-                    window.AudioContext ||
-                    window.webkitAudioContext
-                )();
-
-        }
-
-        if (
-            audioContext.state ===
-            "suspended"
-        ) {
-
-            audioContext.resume();
-
-        }
-
-    } catch (error) {
-
-        console.log(
-            "Ses başlatılamadı."
-        );
-
-    }
-}
-
-
-function playSound(
-    frequency = 440,
-    duration = 0.07,
-    type = "sine"
-) {
-
-    if (!audioContext) return;
-
-    try {
-
-        const oscillator =
-            audioContext.createOscillator();
-
-        const gain =
-            audioContext.createGain();
-
-        oscillator.type = type;
-
-        oscillator.frequency.value =
-            frequency;
-
-        gain.gain.setValueAtTime(
-            0.06,
-            audioContext.currentTime
-        );
-
-        gain.gain.exponentialRampToValueAtTime(
-            0.001,
-            audioContext.currentTime +
-            duration
-        );
-
-        oscillator.connect(gain);
-        gain.connect(audioContext.destination);
-
-        oscillator.start();
-
-        oscillator.stop(
-            audioContext.currentTime +
-            duration
-        );
-
-    } catch (error) {
-
-        // Ses desteklenmiyorsa oyunu bozma.
-    }
-}
-
-
-/* =========================================================
-   TİTREŞİM
-========================================================= */
-
-function vibrate(
-    duration = 20
-) {
-
-    if (
-        navigator.vibrate
-    ) {
-
-        navigator.vibrate(
-            duration
-        );
-
-    }
-
-}
-
-
-/* =========================================================
-   MATTER ENGINE
-========================================================= */
-
-const engine =
-    Engine.create();
-
-
-/*
-   Eski 1 yerine biraz daha yüksek
-   yerçekimi.
-*/
-engine.gravity.y = 1.12;
-
-
-const world =
-    engine.world;
-
-
-const runner =
-    Runner.create();
-
-
-/* =========================================================
-   DUVARLAR
-========================================================= */
-
-const wallOptions = {
-
-    isStatic: true,
-
-    render: {
-        visible: false
-    }
-
-};
-
-
-const ground =
-    Bodies.rectangle(
-
-        WIDTH / 2,
-
-        HEIGHT + 25,
-
-        WIDTH,
-
-        50,
-
-        wallOptions
-
-    );
-
-
-const leftWall =
-    Bodies.rectangle(
-
-        -15,
-
-        HEIGHT / 2,
-
-        30,
-
-        HEIGHT,
-
-        wallOptions
-
-    );
-
-
-const rightWall =
-    Bodies.rectangle(
-
-        WIDTH + 15,
-
-        HEIGHT / 2,
-
-        30,
-
-        HEIGHT,
-
-        wallOptions
-
-    );
-
-
-Composite.add(
-
-    world,
-
-    [
-        ground,
-        leftWall,
-        rightWall
-    ]
-
-);
-
-
-/* =========================================================
-   OYUN DEĞİŞKENLERİ
-========================================================= */
-
-let score = 0;
-
-let highScore =
-    Number(
-        localStorage.getItem(
-            "meyveHighScore"
-        )
-    ) || 0;
-
-let gameOver = false;
-
-let canDrop = true;
-
-let dropX =
-    WIDTH / 2;
-
-let currentFruitIndex = 0;
-
-let nextFruitIndex = 0;
-
-let gameStartedTime =
-    Date.now();
-
-let mergeQueue = [];
-
-let merging = false;
-
-
-/*
-   Oyunun giderek zorlaşması için.
-*/
-let difficulty =
-    0;
-
-
-/*
-   Combo sistemi.
-*/
-let combo = 0;
-
-let lastMergeTime = 0;
-
-
-/*
-   Aynı anda çok fazla meyve
-   düşürülmesini engeller.
-*/
-let dropCooldown = 400;
-
-
-/* =========================================================
-   HIGH SCORE
-========================================================= */
-
-highScoreElement.textContent =
-    highScore;
-
-
-/* =========================================================
-   RASTGELE MEYVE
-========================================================= */
-
-/*
-   Başlangıçta küçük meyveler.
-   İlerledikçe 4. seviye de
-   nadiren gelebiliyor.
-*/
-
-function randomSpawnIndex() {
-
-    const random =
-        Math.random();
-
-    /*
-       Oyunun başı.
-    */
-    if (difficulty < 5) {
-
-        return Math.floor(
-            Math.random() * 3
-        );
-
-    }
-
-
-    /*
-       Orta zorluk.
-    */
-    if (difficulty < 15) {
-
-        if (random < 0.82) {
-
-            return Math.floor(
-                Math.random() * 3
-            );
-
-        }
-
-        return 3;
-
-    }
-
-
-    /*
-       Zor.
-    */
-    if (random < 0.70) {
-
-        return Math.floor(
-            Math.random() * 3
-        );
-
-    }
-
-    if (random < 0.93) {
-
-        return 3;
-
-    }
-
-    return 4;
-
-}
-
-
-/* =========================================================
-   SONRAKİ MEYVEYİ HAZIRLA
-========================================================= */
-
-function spawnNextFruit() {
-
-    currentFruitIndex =
-        nextFruitIndex;
-
-    nextFruitIndex =
-        randomSpawnIndex();
-
-
-    const radius =
-        FRUIT_TYPES[
-            currentFruitIndex
-        ].radius;
-
-
-    dropX = Math.max(
-
-        radius + 5,
-
-        Math.min(
-
-            WIDTH -
-            radius -
-            5,
-
-            dropX
-
-        )
-
-    );
-
-}
-
-
-/* =========================================================
-   MEYVE OLUŞTUR
-========================================================= */
-
-function createFruit(
-    index,
-    x,
-    y
-) {
-
-    const data =
-        FRUIT_TYPES[index];
-
-
-    const fruit =
-        Bodies.circle(
-
-            x,
-            y,
-            data.radius,
-
-            {
-
-                /*
-                   Daha az zıplama.
-                */
-                restitution: 0.08,
-
-                /*
-                   Sürtünmeyi biraz artır.
-                */
-                friction: 0.22,
-
-                frictionStatic: 0.5,
-
-                density: 0.0012,
-
-                render: {
-                    visible: false
-                }
-
+    /* SES & TİTREŞİM */
+    let audioContext = null;
+
+    function initAudio() {
+        try {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
             }
-
-        );
-
-
-    fruit.fruitIndex =
-        index;
-
-    fruit.isFruit =
-        true;
-
-    fruit.isDead =
-        false;
-
-    fruit.isDropped =
-        false;
-
-
-    return fruit;
-
-}
-
-
-/* =========================================================
-   BAŞLANGIÇ
-========================================================= */
-
-nextFruitIndex =
-    randomSpawnIndex();
-
-
-spawnNextFruit();
-
-
-Runner.run(
-    runner,
-    engine
-);
-
-
-/* =========================================================
-   TOUCH / POINTER
-========================================================= */
-
-function getPointerX(
-    event
-) {
-
-    const rect =
-        canvas.getBoundingClientRect();
-
-
-    return (
-
-        event.clientX -
-        rect.left
-
-    ) * WIDTH / rect.width;
-
-}
-
-
-/* =========================================================
-   MEYVEYİ HAREKET ETTİR
-========================================================= */
-
-function handleMove(
-    event
-) {
-
-    if (
-        gameOver ||
-        !canDrop
-    ) {
-
-        return;
-
+            if (audioContext.state === "suspended") {
+                audioContext.resume();
+            }
+        } catch (e) {}
     }
 
-
-    const radius =
-        FRUIT_TYPES[
-            currentFruitIndex
-        ].radius;
-
-
-    dropX = Math.max(
-
-        radius + 5,
-
-        Math.min(
-
-            WIDTH -
-            radius -
-            5,
-
-            getPointerX(event)
-
-        )
-
-    );
-
-}
-
-
-/* =========================================================
-   POINTER MOVE
-========================================================= */
-
-canvas.addEventListener(
-
-    "pointermove",
-
-    handleMove,
-
-    {
-        passive: true
+    function playSound(frequency = 440, duration = 0.07, type = "sine") {
+        if (!audioContext) return;
+        try {
+            const osc = audioContext.createOscillator();
+            const gain = audioContext.createGain();
+            osc.type = type;
+            osc.frequency.value = frequency;
+            gain.gain.setValueAtTime(0.06, audioContext.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + duration);
+            osc.connect(gain);
+            gain.connect(audioContext.destination);
+            osc.start();
+            osc.stop(audioContext.currentTime + duration);
+        } catch (e) {}
     }
 
-);
+    function vibrate(duration = 20) {
+        if (navigator.vibrate) navigator.vibrate(duration);
+    }
 
+    /* MATTER ENGINE */
+    const engine = Engine.create();
+    engine.gravity.y = 1.12;
+    const world = engine.world;
+    const runner = Runner.create();
 
-/* =========================================================
-   POINTER DOWN
-========================================================= */
+    /* DUVARLAR */
+    const wallOptions = { isStatic: true, render: { visible: false } };
+    const ground = Bodies.rectangle(WIDTH / 2, HEIGHT + 25, WIDTH, 50, wallOptions);
+    const leftWall = Bodies.rectangle(-15, HEIGHT / 2, 30, HEIGHT, wallOptions);
+    const rightWall = Bodies.rectangle(WIDTH + 15, HEIGHT / 2, 30, HEIGHT, wallOptions);
+    Composite.add(world, [ground, leftWall, rightWall]);
 
-canvas.addEventListener(
+    /* OYUN DEĞİŞKENLERİ */
+    let playerName = "Oyuncu";
+    let score = 0;
+    let highScore = Number(localStorage.getItem("meyveHighScore")) || 0;
+    let gameOver = false;
+    let canDrop = false;
+    let dropX = WIDTH / 2;
+    let currentFruitIndex = 0;
+    let nextFruitIndex = 0;
+    let gameStartedTime = Date.now();
+    let mergeQueue = [];
+    let merging = false;
+    let difficulty = 0;
+    let combo = 0;
+    let lastMergeTime = 0;
+    let dropCooldown = 400;
 
-    "pointerdown",
+    highScoreElement.textContent = highScore;
 
-    event => {
+    function randomSpawnIndex() {
+        const random = Math.random();
+        if (difficulty < 5) return Math.floor(Math.random() * 3);
+        if (difficulty < 15) return random < 0.82 ? Math.floor(Math.random() * 3) : 3;
+        if (random < 0.70) return Math.floor(Math.random() * 3);
+        return random < 0.93 ? 3 : 4;
+    }
 
+    function spawnNextFruit() {
+        currentFruitIndex = nextFruitIndex;
+        nextFruitIndex = randomSpawnIndex();
+        const radius = FRUIT_TYPES[currentFruitIndex].radius;
+        dropX = Math.max(radius + 5, Math.min(WIDTH - radius - 5, dropX));
+    }
+
+    function createFruit(index, x, y) {
+        const data = FRUIT_TYPES[index];
+        const fruit = Bodies.circle(x, y, data.radius, {
+            restitution: 0.08,
+            friction: 0.22,
+            frictionStatic: 0.5,
+            density: 0.0012,
+            render: { visible: false }
+        });
+        fruit.fruitIndex = index;
+        fruit.isFruit = true;
+        fruit.isDead = false;
+        fruit.isDropped = false;
+        return fruit;
+    }
+
+    function dropFruit() {
+        if (!canDrop || gameOver) return;
+
+        canDrop = false;
+
+        const fruit = createFruit(currentFruitIndex, dropX, 42);
+        fruit.isDropped = true;
+        Composite.add(world, fruit);
+
+        playSound(280, 0.05);
+        vibrate(8);
+
+        const cooldown = Math.max(250, dropCooldown - difficulty * 4);
+
+        setTimeout(() => {
+            if (!gameOver) {
+                spawnNextFruit();
+                canDrop = true;
+            }
+        }, cooldown);
+    }
+
+    function getPointerX(event) {
+        const rect = canvas.getBoundingClientRect();
+        return (event.clientX - rect.left) * WIDTH / rect.width;
+    }
+
+    function handleMove(event) {
+        if (gameOver || !canDrop) return;
+        const radius = FRUIT_TYPES[currentFruitIndex].radius;
+        dropX = Math.max(radius + 5, Math.min(WIDTH - radius - 5, getPointerX(event)));
+    }
+
+    canvas.addEventListener("pointermove", handleMove, { passive: true });
+
+    canvas.addEventListener("pointerdown", event => {
         event.preventDefault();
-
         initAudio();
-
-
-        if (gameOver) {
-
-            return;
-
-        }
-
-
+        if (gameOver || !canDrop) return;
         handleMove(event);
-
         dropFruit();
+    }, { passive: false });
 
-    },
+    Events.on(engine, "collisionStart", event => {
+        if (gameOver) return;
+        for (const pair of event.pairs) {
+            const a = pair.bodyA;
+            const b = pair.bodyB;
 
-    {
-        passive: false
-    }
+            if (a.isFruit && b.isFruit && a.fruitIndex === b.fruitIndex && !a.isDead && !b.isDead && a.fruitIndex < FRUIT_TYPES.length - 1) {
+                a.isDead = true;
+                b.isDead = true;
+                mergeQueue.push({ a, b, index: a.fruitIndex });
+            }
+        }
+        processMerges();
+    });
 
-);
+    function processMerges() {
+        if (merging || mergeQueue.length === 0) return;
+        merging = true;
 
+        const merge = mergeQueue.shift();
+        const { a, b, index } = merge;
+        const x = (a.position.x + b.position.x) / 2;
+        const y = (a.position.y + b.position.y) / 2;
 
-/* =========================================================
-   MEYVE BIRAK
-========================================================= */
+        Composite.remove(world, a);
+        Composite.remove(world, b);
 
-function dropFruit() {
+        const nextIndex = index + 1;
+        const newFruit = createFruit(nextIndex, x, y);
+        newFruit.isDropped = true;
+        Composite.add(world, newFruit);
 
-    if (
-        !canDrop ||
-        gameOver
-    ) {
+        const now = Date.now();
+        combo = (now - lastMergeTime < 1200) ? combo + 1 : 1;
+        lastMergeTime = now;
 
-        return;
+        const baseScore = FRUIT_TYPES[nextIndex].score;
+        const comboBonus = Math.max(0, combo - 1) * 2;
+        score += baseScore + comboBonus;
+        scoreElement.textContent = score;
 
-    }
-
-
-    canDrop = false;
-
-
-    const fruit =
-        createFruit(
-
-            currentFruitIndex,
-
-            dropX,
-
-            42
-
-        );
-
-
-    fruit.isDropped =
-        true;
-
-
-    Composite.add(
-        world,
-        fruit
-    );
-
-
-    /*
-       Bırakma sesi.
-    */
-    playSound(
-        280,
-        0.05
-    );
-
-
-    /*
-       Oyuncuya hafif titreşim.
-    */
-    vibrate(8);
-
-
-    /*
-       Bir süre sonra yeni meyve.
-       Zorluk arttıkça süre azalıyor.
-    */
-
-    const cooldown =
-        Math.max(
-
-            250,
-
-            dropCooldown -
-            difficulty * 4
-
-        );
-
-
-    setTimeout(() => {
-
-        if (gameOver) {
-
-            return;
-
+        if (score > highScore) {
+            highScore = score;
+            highScoreElement.textContent = highScore;
+            localStorage.setItem("meyveHighScore", String(highScore));
         }
 
+        difficulty += 0.5;
+        playSound(350 + nextIndex * 70, 0.09, "triangle");
+        vibrate(Math.min(35, 12 + nextIndex * 4));
 
+        Body.setVelocity(newFruit, { x: 0, y: -1 });
+
+        setTimeout(() => {
+            merging = false;
+            processMerges();
+        }, 25);
+    }
+
+    Events.on(engine, "afterUpdate", () => {
+        if (gameOver) return;
+        if (Date.now() - gameStartedTime < 3000) return;
+
+        const fruits = Composite.allBodies(world).filter(b => b.isFruit && !b.isDead && b.isDropped);
+
+        for (const fruit of fruits) {
+            if (fruit.position.y < DEAD_LINE_Y && Math.abs(fruit.velocity.y) < 0.25 && Math.abs(fruit.velocity.x) < 0.25) {
+                triggerGameOver();
+                break;
+            }
+        }
+    });
+
+    function triggerGameOver() {
+        gameOver = true;
+        canDrop = false;
+
+        saveScore(playerName, score);
+        updateLeaderboardUI();
+
+        vibrate([80, 50, 80]);
+        playSound(150, 0.25, "sawtooth");
+        restartButton.style.display = "block";
+    }
+
+    function resetGame() {
+        const bodies = Composite.allBodies(world);
+        for (const body of bodies) {
+            if (body !== ground && body !== leftWall && body !== rightWall) {
+                Composite.remove(world, body);
+            }
+        }
+
+        score = 0;
+        difficulty = 0;
+        combo = 0;
+        lastMergeTime = 0;
+        scoreElement.textContent = "0";
+        gameOver = false;
+        merging = false;
+        mergeQueue = [];
+        gameStartedTime = Date.now();
+        dropX = WIDTH / 2;
+
+        nextFruitIndex = randomSpawnIndex();
         spawnNextFruit();
 
+        restartButton.style.display = "none";
         canDrop = true;
-
-    }, cooldown);
-
-}
-
-
-/* =========================================================
-   COLLISION
-========================================================= */
-
-Events.on(
-
-    engine,
-
-    "collisionStart",
-
-    event => {
-
-        if (gameOver) {
-
-            return;
-
-        }
-
-
-        for (
-            const pair
-            of event.pairs
-        ) {
-
-            const a =
-                pair.bodyA;
-
-            const b =
-                pair.bodyB;
-
-
-            if (
-
-                a.isFruit &&
-
-                b.isFruit &&
-
-                a.fruitIndex ===
-                b.fruitIndex &&
-
-                !a.isDead &&
-
-                !b.isDead &&
-
-                a.fruitIndex <
-                FRUIT_TYPES.length - 1
-
-            ) {
-
-                /*
-                   İki meyveyi öldür.
-                */
-
-                a.isDead = true;
-
-                b.isDead = true;
-
-
-                /*
-                   Birleştirme kuyruğuna ekle.
-                */
-
-                mergeQueue.push({
-
-                    a: a,
-
-                    b: b,
-
-                    index:
-                        a.fruitIndex
-
-                });
-
-            }
-
-        }
-
-
-        processMerges();
-
+        initAudio();
+        playSound(500, 0.06);
     }
 
-);
-
-
-/* =========================================================
-   MERGE
-========================================================= */
-
-function processMerges() {
-
-    if (
-
-        merging ||
-
-        mergeQueue.length === 0
-
-    ) {
-
-        return;
-
-    }
-
-
-    merging = true;
-
-
-    const merge =
-        mergeQueue.shift();
-
-
-    const {
-
-        a,
-        b,
-        index
-
-    } = merge;
-
-
-    /*
-       Ortalama pozisyon.
-    */
-
-    const x =
-        (
-            a.position.x +
-            b.position.x
-        ) / 2;
-
-
-    const y =
-        (
-            a.position.y +
-            b.position.y
-        ) / 2;
-
-
-    /*
-       Eski meyveleri sil.
-    */
-
-    Composite.remove(
-        world,
-        a
-    );
-
-    Composite.remove(
-        world,
-        b
-    );
-
-
-    const nextIndex =
-        index + 1;
-
-
-    /*
-       Yeni meyve.
-    */
-
-    const newFruit =
-        createFruit(
-
-            nextIndex,
-
-            x,
-
-            y
-
-        );
-
-
-    newFruit.isDropped =
-        true;
-
-
-    Composite.add(
-        world,
-        newFruit
-    );
-
-
-    /* =====================================================
-       COMBO
-    ===================================================== */
-
-    const now =
-        Date.now();
-
-
-    if (
-        now - lastMergeTime <
-        1200
-    ) {
-
-        combo++;
-
-    } else {
-
-        combo = 1;
-
-    }
-
-
-    lastMergeTime =
-        now;
-
-
-    /*
-       Combo bonusu.
-    */
-
-    const baseScore =
-        FRUIT_TYPES[
-            nextIndex
-        ].score;
-
-
-    const comboBonus =
-        Math.max(
-            0,
-            combo - 1
-        ) * 2;
-
-
-    score +=
-        baseScore +
-        comboBonus;
-
-
-    scoreElement.textContent =
-        score;
-
-
-    /* =====================================================
-       HIGH SCORE
-    ===================================================== */
-
-    if (
-        score >
-        highScore
-    ) {
-
-        highScore =
-            score;
-
-
-        highScoreElement.textContent =
-            highScore;
-
-
-        localStorage.setItem(
-
-            "meyveHighScore",
-
-            String(highScore)
-
-        );
-
-    }
-
-
-    /*
-       Zorluk artır.
-    */
-
-    difficulty += 0.5;
-
-
-    /*
-       Ses.
-    */
-
-    playSound(
-
-        350 +
-        nextIndex * 70,
-
-        0.09,
-
-        "triangle"
-
-    );
-
-
-    /*
-       Büyük birleşmelerde
-       daha güçlü titreşim.
-    */
-
-    vibrate(
-
-        Math.min(
-            35,
-            12 +
-            nextIndex * 4
-        )
-
-    );
-
-
-    /*
-       Yeni meyvenin hafif yukarı
-       doğru hareket etmesini sağla.
-    */
-
-    Body.setVelocity(
-
-        newFruit,
-
-        {
-
-            x: 0,
-
-            y: -1
-
-        }
-
-    );
-
-
-    /*
-       Sonraki merge.
-    */
-
-    setTimeout(() => {
-
-        merging = false;
-
-        processMerges();
-
-    }, 25);
-
-}
-
-
-/* =========================================================
-   GAME OVER KONTROLÜ
-========================================================= */
-
-Events.on(
-
-    engine,
-
-    "afterUpdate",
-
-    () => {
-
-        if (gameOver) {
-
-            return;
-
-        }
-
-
-        /*
-           Oyunun ilk saniyelerinde
-           hemen game over olmasın.
-        */
-
-        if (
-            Date.now() -
-            gameStartedTime <
-            3000
-        ) {
-
-            return;
-
-        }
-
-
-        const fruits =
-            Composite
-                .allBodies(world)
-                .filter(
-
-                    body =>
-
-                        body.isFruit &&
-
-                        !body.isDead &&
-
-                        body.isDropped
-
-                );
-
-
-        for (
-            const fruit
-            of fruits
-        ) {
-
-            /*
-               Meyve ölüm çizgisinin
-               üstünde ve uzun süre
-               hareketsizse.
-            */
-
-            if (
-
-                fruit.position.y <
-                DEAD_LINE_Y &&
-
-                Math.abs(
-                    fruit.velocity.y
-                ) < 0.25 &&
-
-                Math.abs(
-                    fruit.velocity.x
-                ) < 0.25
-
-            ) {
-
-                triggerGameOver();
-
-                break;
-
-            }
-
-        }
-
-    }
-
-);
-
-
-/* =========================================================
-   GAME OVER
-========================================================= */
-
-function triggerGameOver() {
-
-    gameOver = true;
-
-    canDrop = false;
-
-
-    /*
-       Titreşim.
-    */
-
-    if (
-        navigator.vibrate
-    ) {
-
-        navigator.vibrate(
-            [
-                80,
-                50,
-                80
-            ]
-        );
-
-    }
-
-
-    playSound(
-        150,
-        0.25,
-        "sawtooth"
-    );
-
-
-    restartButton.style.display =
-        "block";
-
-}
-
-
-/* =========================================================
-   RESET
-========================================================= */
-
-function resetGame() {
-
-    const bodies =
-        Composite.allBodies(
-            world
-        );
-
-
-    /*
-       Tüm meyveleri sil.
-    */
-
-    for (
-        const body
-        of bodies
-    ) {
-
-        if (
-
-            body !== ground &&
-
-            body !== leftWall &&
-
-            body !== rightWall
-
-        ) {
-
-            Composite.remove(
-                world,
-                body
-            );
-
-        }
-
-    }
-
-
-    /*
-       Değişkenleri sıfırla.
-    */
-
-    score = 0;
-
-    difficulty = 0;
-
-    combo = 0;
-
-    lastMergeTime = 0;
-
-    scoreElement.textContent =
-        "0";
-
-
-    gameOver = false;
-
-    canDrop = true;
-
-    merging = false;
-
-    mergeQueue = [];
-
-
-    gameStartedTime =
-        Date.now();
-
-
-    dropX =
-        WIDTH / 2;
-
-
-    nextFruitIndex =
-        randomSpawnIndex();
-
-
-    spawnNextFruit();
-
-
-    restartButton.style.display =
-        "none";
-
-
-    initAudio();
-
-
-    playSound(
-        500,
-        0.06
-    );
-
-}
-
-
-/* =========================================================
-   RESTART BUTTON
-========================================================= */
-
-restartButton.addEventListener(
-
-    "click",
-
-    () => {
-
+    restartButton.addEventListener("click", () => {
         resetGame();
-
-    }
-
-);
-
-
-/* =========================================================
-   RESİM ÇİZ
-========================================================= */
-
-function drawFruit(
-
-    x,
-    y,
-    radius,
-    index
-
-) {
-
-    ctx.save();
-
-
-    /*
-       Daire şeklinde kırp.
-    */
-
-    ctx.beginPath();
-
-    ctx.arc(
-
-        x,
-        y,
-        radius,
-        0,
-        Math.PI * 2
-
-    );
-
-    ctx.closePath();
-
-    ctx.clip();
-
-
-    const img =
-        fruitImages[index];
-
-
-    if (
-
-        img &&
-
-        img.complete &&
-
-        img.naturalWidth > 0
-
-    ) {
-
-        ctx.drawImage(
-
-            img,
-
-            x - radius,
-
-            y - radius,
-
-            radius * 2,
-
-            radius * 2
-
-        );
-
-    }
-
-    else {
-
-        /*
-           Resim yoksa alternatif.
-        */
-
-        const colors = [
-
-            "#ff6b81",
-            "#ffa502",
-            "#ffdd59",
-            "#7bed9f",
-            "#70a1ff",
-            "#a29bfe",
-            "#ff9ff3"
-
-        ];
-
-
-        ctx.fillStyle =
-            colors[index] ||
-            "#ffcc00";
-
-
-        ctx.fillRect(
-
-            x - radius,
-
-            y - radius,
-
-            radius * 2,
-
-            radius * 2
-
-        );
-
-
-        ctx.fillStyle =
-            "#ffffff";
-
-
-        ctx.font =
-            `bold ${Math.max(
-                12,
-                radius
-            )}px Arial`;
-
-
-        ctx.textAlign =
-            "center";
-
-
-        ctx.textBaseline =
-            "middle";
-
-
-        ctx.fillText(
-            "🍎",
-            x,
-            y
-        );
-
-    }
-
-
-    ctx.restore();
-
-
-    /*
-       Beyaz dış çizgi.
-    */
-
-    ctx.beginPath();
-
-    ctx.arc(
-
-        x,
-        y,
-        radius,
-        0,
-        Math.PI * 2
-
-    );
-
-
-    ctx.strokeStyle =
-        "rgba(255,255,255,.75)";
-
-
-    ctx.lineWidth = 2;
-
-    ctx.stroke();
-
-}
-
-
-/* =========================================================
-   CANVAS
-========================================================= */
-
-function draw() {
-
-    ctx.clearRect(
-        0,
-        0,
-        WIDTH,
-        HEIGHT
-    );
-
-
-    /*
-       Arka plan.
-    */
-
-    const gradient =
-        ctx.createLinearGradient(
-            0,
-            0,
-            0,
-            HEIGHT
-        );
-
-
-    gradient.addColorStop(
-        0,
-        "#30304d"
-    );
-
-    gradient.addColorStop(
-        1,
-        "#202033"
-    );
-
-
-    ctx.fillStyle =
-        gradient;
-
-
-    ctx.fillRect(
-        0,
-        0,
-        WIDTH,
-        HEIGHT
-    );
-
-
-    /* =====================================================
-       ÖLÜM ÇİZGİSİ
-    ===================================================== */
-
-    ctx.beginPath();
-
-    ctx.moveTo(
-        0,
-        DEAD_LINE_Y
-    );
-
-    ctx.lineTo(
-        WIDTH,
-        DEAD_LINE_Y
-    );
-
-
-    ctx.setLineDash([
-        7,
-        5
-    ]);
-
-
-    ctx.strokeStyle =
-        "rgba(255,71,87,.85)";
-
-
-    ctx.lineWidth = 2;
-
-    ctx.stroke();
-
-    ctx.setLineDash([]);
-
-
-    /*
-       Çizginin üstüne uyarı.
-    */
-
-    ctx.fillStyle =
-        "rgba(255,71,87,.7)";
-
-
-    ctx.font =
-        "bold 10px Arial";
-
-
-    ctx.textAlign =
-        "right";
-
-
-    ctx.fillText(
-        "TEHLİKE",
-        WIDTH - 8,
-        DEAD_LINE_Y - 5
-    );
-
-
-    /* =====================================================
-       DÜŞECEK MEYVE
-    ===================================================== */
-
-    if (!gameOver) {
-
-        const radius =
-            FRUIT_TYPES[
-                currentFruitIndex
-            ].radius;
-
-
-        /*
-           Düşme çizgisi.
-        */
+    });
+
+    /* GİRİŞ EKRANI BUTONU */
+    startGameBtn.addEventListener("click", () => {
+        const val = nameInput.value.trim();
+        if (val) playerName = val;
+        startModal.style.display = "none";
+        
+        nextFruitIndex = randomSpawnIndex();
+        spawnNextFruit();
+        canDrop = true;
+        gameStartedTime = Date.now();
+        Runner.run(runner, engine);
+    });
+
+    function drawFruit(x, y, radius, index) {
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(x, y, radius, 0, Math.PI * 2);
+        ctx.closePath();
+        ctx.clip();
+
+        const img = fruitImages[index];
+        if (img && img.complete && img.naturalWidth > 0) {
+            ctx.drawImage(img, x - radius, y - radius, radius * 2, radius * 2);
+        } else {
+            const colors = ["#ff6b81", "#ffa502", "#ffdd59", "#7bed9f", "#70a1ff", "#a29bfe", "#ff9ff3"];
+            ctx.fillStyle = colors[index] || "#ffcc00";
+            ctx.fillRect(x - radius, y - radius, radius * 2, radius * 2);
+            ctx.fillStyle = "#ffffff";
+            ctx.font = `bold ${Math.max(12, radius)}px Arial`;
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText("🍎", x, y);
+        }
+        ctx.restore();
 
         ctx.beginPath();
-
-        ctx.moveTo(
-            dropX,
-            DEAD_LINE_Y
-        );
-
-        ctx.lineTo(
-            dropX,
-            HEIGHT
-        );
-
-
-        ctx.strokeStyle =
-            "rgba(255,255,255,.10)";
-
-
-        ctx.lineWidth = 1;
-
+        ctx.arc(x, y, radius, 0, Math.PI * 2);
+        ctx.strokeStyle = "rgba(255,255,255,.75)";
+        ctx.lineWidth = 2;
         ctx.stroke();
-
-
-        /*
-           Önizleme meyvesi.
-        */
-
-        drawFruit(
-
-            dropX,
-
-            40,
-
-            radius,
-
-            currentFruitIndex
-
-        );
-
     }
 
+    function draw() {
+        ctx.clearRect(0, 0, WIDTH, HEIGHT);
 
-    /* =====================================================
-       SAHNEDEKİ MEYVELER
-    ===================================================== */
+        const gradient = ctx.createLinearGradient(0, 0, 0, HEIGHT);
+        gradient.addColorStop(0, "#30304d");
+        gradient.addColorStop(1, "#202033");
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, WIDTH, HEIGHT);
 
-    for (
-        const body
-        of Composite.allBodies(world)
-    ) {
+        /* ÖLÜM ÇİZGİSİ */
+        ctx.beginPath();
+        ctx.moveTo(0, DEAD_LINE_Y);
+        ctx.lineTo(WIDTH, DEAD_LINE_Y);
+        ctx.setLineDash([7, 5]);
+        ctx.strokeStyle = "rgba(255,71,87,.85)";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        ctx.setLineDash([]);
 
-        if (
+        ctx.fillStyle = "rgba(255,71,87,.7)";
+        ctx.font = "bold 10px Arial";
+        ctx.textAlign = "right";
+        ctx.fillText("TEHLİKE", WIDTH - 8, DEAD_LINE_Y - 5);
 
-            body.isFruit &&
+        /* DÜŞECEK MEYVE */
+        if (!gameOver && canDrop) {
+            const radius = FRUIT_TYPES[currentFruitIndex].radius;
+            ctx.beginPath();
+            ctx.moveTo(dropX, DEAD_LINE_Y);
+            ctx.lineTo(dropX, HEIGHT);
+            ctx.strokeStyle = "rgba(255,255,255,.10)";
+            ctx.lineWidth = 1;
+            ctx.stroke();
 
-            !body.isDead
-
-        ) {
-
-            drawFruit(
-
-                body.position.x,
-
-                body.position.y,
-
-                FRUIT_TYPES[
-                    body.fruitIndex
-                ].radius,
-
-                body.fruitIndex
-
-            );
-
+            drawFruit(dropX, 40, radius, currentFruitIndex);
         }
 
-    }
-
-
-    /* =====================================================
-       COMBO
-    ===================================================== */
-
-    if (
-
-        combo > 1 &&
-
-        Date.now() -
-        lastMergeTime <
-        1000
-
-    ) {
-
-        ctx.fillStyle =
-            "#ffcc00";
-
-
-        ctx.font =
-            "bold 18px Arial";
-
-
-        ctx.textAlign =
-            "center";
-
-
-        ctx.fillText(
-
-            "COMBO x" +
-            combo,
-
-            WIDTH / 2,
-
-            25
-
-        );
-
-    }
-
-
-    /* =====================================================
-       GAME OVER
-    ===================================================== */
-
-    if (gameOver) {
-
-        /*
-           Koyu ekran.
-        */
-
-        ctx.fillStyle =
-            "rgba(0,0,0,.78)";
-
-
-        ctx.fillRect(
-
-            0,
-            0,
-            WIDTH,
-            HEIGHT
-
-        );
-
-
-        /*
-           Başlık.
-        */
-
-        ctx.fillStyle =
-            "#ff4757";
-
-
-        ctx.font =
-            "bold 32px Arial";
-
-
-        ctx.textAlign =
-            "center";
-
-
-        ctx.fillText(
-
-            "OYUN BİTTİ",
-
-            WIDTH / 2,
-
-            HEIGHT / 2 - 45
-
-        );
-
-
-        /*
-           Skor.
-        */
-
-        ctx.fillStyle =
-            "#ffffff";
-
-
-        ctx.font =
-            "bold 20px Arial";
-
-
-        ctx.fillText(
-
-            "Puan: " +
-            score,
-
-            WIDTH / 2,
-
-            HEIGHT / 2
-
-        );
-
-
-        /*
-           High score.
-        */
-
-        ctx.fillStyle =
-            "#ffcc00";
-
-
-        ctx.font =
-            "16px Arial";
-
-
-        ctx.fillText(
-
-            "En Yüksek: " +
-            highScore,
-
-            WIDTH / 2,
-
-            HEIGHT / 2 + 30
-
-        );
-
-    }
-
-
-    requestAnimationFrame(
-        draw
-    );
-
-}
-
-
-/* =========================================================
-   BAŞLAT
-========================================================= */
-
-draw();
-
-
-/* =========================================================
-   iOS SAFARI İÇİN EK KORUMA
-========================================================= */
-
-document.addEventListener(
-
-    "gesturestart",
-
-    event => {
-
-        event.preventDefault();
-
-    },
-
-    {
-        passive: false
-    }
-
-);
-
-
-/*
-   Çift dokunarak zoom yapılmasını
-   engelle.
-*/
-
-let lastTouchEnd = 0;
-
-
-document.addEventListener(
-
-    "touchend",
-
-    event => {
-
-        const now =
-            Date.now();
-
-
-        if (
-            now - lastTouchEnd <= 300
-        ) {
-
-            event.preventDefault();
-
+        /* SAHNEDEKİ MEYVELER */
+        for (const body of Composite.allBodies(world)) {
+            if (body.isFruit && !body.isDead) {
+                drawFruit(body.position.x, body.position.y, FRUIT_TYPES[body.fruitIndex].radius, body.fruitIndex);
+            }
         }
 
+        /* COMBO */
+        if (combo > 1 && Date.now() - lastMergeTime < 1000) {
+            ctx.fillStyle = "#ffcc00";
+            ctx.font = "bold 18px Arial";
+            ctx.textAlign = "center";
+            ctx.fillText("COMBO x" + combo, WIDTH / 2, 25);
+        }
 
+        /* GAME OVER EKRANI */
+        if (gameOver) {
+            ctx.fillStyle = "rgba(0,0,0,.78)";
+            ctx.fillRect(0, 0, WIDTH, HEIGHT);
+
+            ctx.fillStyle = "#ff4757";
+            ctx.font = "bold 32px Arial";
+            ctx.textAlign = "center";
+            ctx.fillText("OYUN BİTTİ", WIDTH / 2, HEIGHT / 2 - 45);
+
+            ctx.fillStyle = "#ffffff";
+            ctx.font = "bold 20px Arial";
+            ctx.fillText(playerName + ": " + score + " Puan", WIDTH / 2, HEIGHT / 2);
+
+            ctx.fillStyle = "#ffcc00";
+            ctx.font = "16px Arial";
+            ctx.fillText("En Yüksek: " + highScore, WIDTH / 2, HEIGHT / 2 + 30);
+        }
+
+        requestAnimationFrame(draw);
+    }
+
+    draw();
+
+    document.addEventListener("gesturestart", e => e.preventDefault(), { passive: false });
+    let lastTouchEnd = 0;
+    document.addEventListener("touchend", e => {
+        const now = Date.now();
+        if (now - lastTouchEnd <= 300) e.preventDefault();
         lastTouchEnd = now;
-
-    },
-
-    {
-        passive: false
-    }
-
-);
-
-
-/*
-   Context menüsünü kapat.
-*/
-
-document.addEventListener(
-
-    "contextmenu",
-
-    event => {
-
-        event.preventDefault();
-
-    }
-
-);
-
-
-})();
+    }, { passive: false });
+    document.addEventListener("contextmenu", e => e.preventDefault());
+});
 </script>
-
 </body>
 </html>
